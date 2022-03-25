@@ -1,0 +1,113 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "bitcoin pricing game",
+            "intents": [
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "BitcoinPriceIntent",
+                    "slots": [
+                        {
+                            "name": "guess",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "My guess is {guess}",
+                        "{guess}",
+                        "I think it's {guess}"
+                    ]
+                }
+            ],
+            "types": []
+        },
+        "dialog": {
+            "intents": [
+                {
+                    "name": "BitcoinPriceIntent",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "guess",
+                            "type": "AMAZON.NUMBER",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {},
+                            "validations": [
+                                {
+                                    "type": "isLessThan",
+                                    "prompt": "Slot.Validation.1274708720781.989519213341.1449537158599",
+                                    "value": "100000"
+                                },
+                                {
+                                    "type": "isGreaterThan",
+                                    "prompt": "Slot.Validation.1274708720781.989519213341.761723273614",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "delegationStrategy": "ALWAYS"
+        },
+        "prompts": [
+            {
+                "id": "Slot.Validation.1402526801845.237553759161.1280704717915",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "I'm sorry you must say either even or odd."
+                    }
+                ]
+            },
+            {
+                "id": "Confirm.Intent.925031059494",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Are you sure that you think the price of Bitcoin is {odd_even}"
+                    }
+                ]
+            },
+            {
+                "id": "Slot.Validation.1274708720781.989519213341.1449537158599",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Pick a number between one and one hundred thousand."
+                    }
+                ]
+            },
+            {
+                "id": "Slot.Validation.1274708720781.989519213341.761723273614",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Pick a number between one and one hundred thousand."
+                    }
+                ]
+            }
+        ]
+    }
+}
