@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # This sample demonstrates how to fetch API data and utilize slots in an Alexa skill using the Alexa Skills Kit SDK for Python.
 
+import os 
+import boto3 
 import requests 
 import json 
 import logging
@@ -10,22 +12,35 @@ from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_core.handler_input import HandlerInput
+from ask_sdk_core.skill_builder import CustomSkillBuilder 
+from ask_sdk_dynamodb.adapter import DynamoDbAdapter
 from ask_sdk_model import Response
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+ddb_region = os.environ.get('DYNAMODB_PERSISTENCE_REGION') 
+ddb_table_name = os.environ.get('DYNAMODB_PERSISTENCE_TABLE_NAME')
+ddb_resource = boto3.resource('dynamodb', region_name=ddb_region) 
+dynamodb_adapter = DynamoDbAdapter(table_name=ddb_table_name, create_table=False, dynamodb_resource=ddb_resource)
 
 class LaunchRequestHandler(AbstractRequestHandler):
     """Handler for Skill Launch."""
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
-
         return ask_utils.is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = 'Welcome to the Bitcoin pricing game. What do you think the current price of Bitcoin is? Guess with in $100 USD to win.'
+        #Get the session attributes and if none exist intialize them.
+        attr = handler_input.attributes_manager.persistent_attributes
+        if not attr:
+            attr['counter'] = 0
+        attr['counter'] += 1
+        speak_output = ("Welcome to the Bitcoin pricing game. What do you think the current price of Bitcoin is? Guess with in $100 USD to win. You have played {} times".format(attr["counter"]))
+        #Save the session attributes
+        handler_input.attributes_manager.session_attributes = attr
+        handler_input.attributes_manager.save_persistent_attributes()
         
         return (
             handler_input.response_builder
@@ -43,6 +58,7 @@ class BitcoinPriceIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         #Get the current price of Bitcoin from Coinbase.
+
         data = requests.get("https://api.coinbase.com/v2/prices/spot?currency=USD")
         data = json.loads(data.text)
         bitcoin_price = data["data"]["amount"]
@@ -175,14 +191,15 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 # payloads to the handlers above. Make sure any new handlers or interceptors you've
 # defined are included below. The order matters - they're processed top to bottom.
 
-
-sb = SkillBuilder()
+#Comment out the current SkillBuilder change it to CustomSkillBuilder
+# sb = SkillBuilder()
+sb = CustomSkillBuilder(persistence_adapter = dynamodb_adapter)
+sb.add_request_handler(SessionEndedRequestHandler())
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(BitcoinPriceIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
-sb.add_request_handler(SessionEndedRequestHandler())
 sb.add_request_handler(IntentReflectorHandler()) # make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
 sb.add_exception_handler(CatchAllExceptionHandler())
 
